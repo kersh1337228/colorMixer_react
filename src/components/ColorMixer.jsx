@@ -1,6 +1,5 @@
 import React from 'react'
 import './ColorMixer.css'
-import $ from 'jquery'
 
 
 export default class ColorMixer extends React.Component {
@@ -31,7 +30,7 @@ export default class ColorMixer extends React.Component {
 
     changeColor(event) {
         let pointer = this.state.pointer
-        if (pointer.mouseHeld) {
+        if (event.type === 'mousemove' && pointer.mouseHeld || event.type === 'click') {
             pointer.position = {
                 x: event.clientX - event.target.getBoundingClientRect().left - 7,
                 y: event.clientY - event.target.getBoundingClientRect().top - 7
@@ -42,8 +41,10 @@ export default class ColorMixer extends React.Component {
 
     changeHue(event) {
         let spectrum = this.state.spectrum
-        if (spectrum.mouseHeld) {
+        if (event.type === 'mousemove' && spectrum.mouseHeld || event.type === 'click') {
             spectrum.position.y = event.clientY - event.target.getBoundingClientRect().top - 9.6
+            const perc = 100 * (spectrum.position.y + 9.6) / event.target.getBoundingClientRect().height
+
             this.setState({spectrum: spectrum})
         }
     }
@@ -70,15 +71,7 @@ export default class ColorMixer extends React.Component {
             <div className={'color_mixer_component'}>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox={'0 0 100 100'}
                      preserveAspectRatio={'none'} className={'color_palette'} ref={this.colorPalette}
-                     onMouseMove={this.changeColor}
-                     onClick={event => {
-                         let pointer = this.state.pointer
-                         pointer.position = {
-                             x: event.clientX - event.target.getBoundingClientRect().left - 7,
-                             y: event.clientY - event.target.getBoundingClientRect().top - 7
-                         }
-                         this.setState({pointer: pointer})
-                     }}
+                     onMouseMove={this.changeColor} onClick={this.changeColor}
                      onMouseOut={() => {
                          let pointer = this.state.pointer
                          pointer.mouseHeld = false
@@ -114,12 +107,7 @@ export default class ColorMixer extends React.Component {
                 }}></div>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox={'0 0 100 100'}
                      preserveAspectRatio={'none'} className={'color_spectrum'} ref={this.colorSpectrum}
-                     onMouseMove={this.changeHue}
-                     onClick={event => {
-                         let spectrum = this.state.spectrum
-                         spectrum.position.y = event.clientY - event.target.getBoundingClientRect().top - 9.6
-                         this.setState({spectrum: spectrum})
-                     }}
+                     onMouseMove={this.changeHue} onClick={this.changeHue}
                      onMouseOut={() => {
                          let spectrum = this.state.spectrum
                          spectrum.mouseHeld = false
@@ -138,8 +126,13 @@ export default class ColorMixer extends React.Component {
                 >
                     <defs>
                         <linearGradient id={'color_spectrum'} gradientTransform={'rotate(90)'}>
-                            <stop offset={'0'} stopColor={'#ffffff'}></stop>
-                            <stop offset={'100%'} stopColor={'#000000'}></stop>
+                            <stop offset={'0'} stopColor={'#ff0000'}></stop>
+                            <stop offset={'16.6%'} stopColor={'#ffff00'}></stop>
+                            <stop offset={'33.3%'} stopColor={'#00ff00'}></stop>
+                            <stop offset={'50%'} stopColor={'#00ffff'}></stop>
+                            <stop offset={'66.6%'} stopColor={'#0000ff'}></stop>
+                            <stop offset={'83.3%'} stopColor={'#ff00ff'}></stop>
+                            <stop offset={'100%'} stopColor={'#ff0000'}></stop>
                         </linearGradient>
                     </defs>
                     <rect x={0} y={0} width={100} height={100} fill={'url(#color_spectrum)'}></rect>

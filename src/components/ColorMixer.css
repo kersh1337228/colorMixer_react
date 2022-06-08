@@ -4,10 +4,11 @@
 }
 
 .color_mixer_component {
-    width: 500px; /*250 production width*/
-    height: 356px; /*178 production height*/
+    width: 250px;
+    height: 178px;
     display: grid;
     grid-column-gap: 10px;
+    grid-row-gap: 10px;
     grid-template-columns: 10fr 1fr;
     z-index: 4;
 }
@@ -47,5 +48,9 @@
 
 .spectrum_pointer .right {
     position: absolute;
-    left: 40px;
+    left: 20px;
+}
+
+.result_color svg {
+    box-shadow: black 0 0 0 1px, white 0 0 0 1px inset;
 }

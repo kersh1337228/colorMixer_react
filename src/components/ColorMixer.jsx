@@ -6,20 +6,29 @@ export default class ColorMixer extends React.Component {
     constructor(props) {
         super(props)
         this.state = {
-            pointer: {
+            pointer: {  // Main color palette pointer
                 mouseHeld: false,
                 position: {
                     x: -7,
                     y: -7
                 }
             },
-            spectrum: {
+            spectrum: {  // Hue scale
                 mouseHeld: false,
                 position: {
                     x: 0,
                     y: 0
                 },
                 hue: 'rgba(255, 0, 0, 1)',
+            },
+            color: {  // Color mixed
+                rgba: 'rgba(255, 255, 255, 1)',
+                hsb: {
+                    hue: 0,
+                    saturation: 0,
+                    brightness: 1,
+                },
+                alpha: 1
             }
         }
         this.colorPalette = React.createRef()
@@ -28,28 +37,72 @@ export default class ColorMixer extends React.Component {
         this.changeHue = this.changeHue.bind(this)
     }
 
-    changeColor(event) {
-        let pointer = this.state.pointer
+    setColor() {  // HSB to RGB conversion
+        const color = this.state.color
+        const c = color.hsb.brightness * color.hsb.saturation
+        const x = c * (1 - Math.abs((color.hsb.hue / 60) % 2 - 1))
+        const m = color.hsb.brightness - c
+        let [r, g, b] = [255, 255, 255]
+        if (color.hsb.hue >= 0 && color.hsb.hue < 60) {
+            [r, g, b] = [c, x, 0]
+        } else if (color.hsb.hue >= 60 && color.hsb.hue < 120) {
+            [r, g, b] = [x, c, 0]
+        } else if (color.hsb.hue >= 120 && color.hsb.hue < 180) {
+            [r, g, b] = [0, c, x]
+        } else if (color.hsb.hue >= 180 && color.hsb.hue < 240) {
+            [r, g, b] = [0, x, c]
+        } else if (color.hsb.hue >= 240 && color.hsb.hue < 300) {
+            [r, g, b] = [x, 0, c]
+        } else if (color.hsb.hue >= 300 && color.hsb.hue < 360) {
+            [r, g, b] = [c, 0, x]
+        }
+        color.rgba = `rgba(${parseInt((r + m) * 255)}, ${parseInt((g + m) * 255)}, ${parseInt((b + m) * 255)}, ${color.alpha})`
+        this.setState({color: color})
+    }
+
+    changeColor(event) {  // Main palette pointer move event
+        let [pointer, color] = [this.state.pointer, this.state.color]
         if (event.type === 'mousemove' && pointer.mouseHeld || event.type === 'click') {
             pointer.position = {
                 x: event.clientX - event.target.getBoundingClientRect().left - 7,
                 y: event.clientY - event.target.getBoundingClientRect().top - 7
             }
-            this.setState({pointer: pointer})
+            color.hsb = {
+                hue: this.state.color.hsb.hue,
+                saturation: (pointer.position.x + 7) / event.target.getBoundingClientRect().width,
+                brightness: 1 - (pointer.position.y + 7) / event.target.getBoundingClientRect().height,
+            }
+            this.setState({pointer: pointer, color: color}, this.setColor)
         }
     }
 
-    changeHue(event) {
-        let spectrum = this.state.spectrum
+    changeHue(event) {  // Hue scale level move event
+        let [spectrum, color] = [this.state.spectrum, this.state.color]
         if (event.type === 'mousemove' && spectrum.mouseHeld || event.type === 'click') {
             spectrum.position.y = event.clientY - event.target.getBoundingClientRect().top - 9.6
-            const perc = 100 * (spectrum.position.y + 9.6) / event.target.getBoundingClientRect().height
-
-            this.setState({spectrum: spectrum})
+            const [overall, sector] = [
+                (spectrum.position.y + 9.6) / event.target.getBoundingClientRect().height,
+                (6 * (spectrum.position.y + 9.6) / event.target.getBoundingClientRect().height) % 1
+            ]
+            color.hsb.hue = 360 * overall  // Current hue angle
+            if (overall >= 0 && overall <= 1 / 6) {
+                spectrum.hue = `rgba(255, ${255 * sector}, 0, 1)`
+            } else if (overall >= 1 / 6 && overall <= 2 / 6) {
+                spectrum.hue = `rgba(${255 * (1 - sector)}, 255, 0, 1)`
+            } else if (overall >= 2 / 6 && overall <= 3 / 6) {
+                spectrum.hue = `rgba(0, 255, ${255 * sector}, 1)`
+            } else if (overall >= 3 / 6 && overall <= 4 / 6) {
+                spectrum.hue = `rgba(0, ${255 * (1 - sector)}, 255, 1)`
+            } else if (overall >= 4 / 6 && overall <= 5 / 6) {
+                spectrum.hue = `rgba(${255 * sector}, 0, 255, 1)`
+            } else {
+                spectrum.hue = `rgba(255, 0, ${255 * (1 - sector)}, 1)`
+            }
+            this.setState({spectrum: spectrum, color: color}, this.setColor)
         }
     }
 
-    componentDidMount() {
+    componentDidMount() {  // Initial color configuration
         let [pointer, spectrum] = [
             this.state.pointer, this.state.spectrum
         ]
@@ -143,6 +196,17 @@ export default class ColorMixer extends React.Component {
                 }}>
                     <div className={'left'}>▸</div>
                     <div className={'right'}>◂</div>
+                </div>
+                <input type={'range'} onChange={event => {
+                    let color = this.state.color
+                    color.alpha = event.target.value / 100
+                    this.setState({color: color}, this.setColor)
+                }} defaultValue={100} className={'alpha_range'} />
+                <div className={'result_color'}>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox={'0 0 100 100'}
+                         preserveAspectRatio={'none'}>
+                        <rect x={0} y={0} width={100} height={100} fill={this.state.color.rgba}></rect>
+                    </svg>
                 </div>
             </div>
         )

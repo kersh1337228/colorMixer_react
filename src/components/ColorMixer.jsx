@@ -85,6 +85,7 @@ export default class ColorMixer extends React.Component {
                 (6 * (spectrum.position.y + 9.6) / event.target.getBoundingClientRect().height) % 1
             ]
             color.hsb.hue = 360 * overall  // Current hue angle
+            // Changing main palette background hue
             if (overall >= 0 && overall <= 1 / 6) {
                 spectrum.hue = `rgba(255, ${255 * sector}, 0, 1)`
             } else if (overall >= 1 / 6 && overall <= 2 / 6) {
@@ -194,8 +195,12 @@ export default class ColorMixer extends React.Component {
                     left: this.state.spectrum.position.x,
                     top: this.state.spectrum.position.y,
                 }}>
-                    <div className={'left'}>▸</div>
-                    <div className={'right'}>◂</div>
+                    <div className={'left'}>
+                        <img src={require('./left_trig.png')} alt={'▸'} height={'10px'} />
+                    </div>
+                    <div className={'right'}>
+                        <img src={require('./right_trig.png')} alt={'◂'} height={'10px'} />
+                    </div>
                 </div>
                 <input type={'range'} onChange={event => {
                     let color = this.state.color
